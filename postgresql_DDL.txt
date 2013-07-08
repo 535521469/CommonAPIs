@@ -1,0 +1,33 @@
+su postgres
+
+createdb DC;
+
+createlang -d DC plpgsql;
+
+psql DC;
+
+CREATE OR REPLACE FUNCTION update_mtime()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.changetimestamp = now(); 
+   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+create table Proxy_HttpInfo(
+SEQID VARCHAR(32) PRIMARY KEY, -- 'ID'
+Host varchar(128) not null , -- 'Host'
+Port int not null ,-- 'Port'
+Country varchar(128) default null ,-- 'Country'
+LastValidDateTime timestamp not null ,-- 'last valid datetime'
+LastInvalidDateTime timestamp not null, -- 'last invalid datetime'
+MTime timestamp default current_timestamp ,-- 'last modify time'
+CTime timestamp default current_timestamp -- 'create datetime'
+) -- 'http proxy info' 
+;
+
+CREATE TRIGGER T_Proxy_HttpInfo_MTime BEFORE UPDATE
+    ON Proxy_HttpInfo FOR EACH ROW EXECUTE PROCEDURE
+    update_mtime();
+
+CREATE UNIQUE INDEX UK_Host_Port ON Proxy_HttpInfo (Host,Port);

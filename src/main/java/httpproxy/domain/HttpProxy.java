@@ -31,7 +31,7 @@ public class HttpProxy implements Cloneable {
 	@Column(name = "LastValidDateTime", nullable = false)
 	private Date lastValidDateTime;
 
-	@Column(name = "lastInvalidDateTime", nullable = false)
+	@Column(name = "LastInvalidDateTime", nullable = false)
 	private Date lastInvalidDateTime;
 
 	public String getSeqID() {
@@ -50,11 +50,11 @@ public class HttpProxy implements Cloneable {
 		this.host = host;
 	}
 
-	public int getPort() {
+	public Integer getPort() {
 		return port;
 	}
 
-	public void setPort(int port) {
+	public void setPort(Integer port) {
 		this.port = port;
 	}
 

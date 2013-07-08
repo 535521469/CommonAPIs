@@ -3,9 +3,9 @@ package httpproxy.domain;
 public class VerifyResult {
 
 	private HttpProxy hp;
-	private long duringTime;
-	private long beginTime;
-	private long endTime;
+	private Long duringTime;
+	private Long beginTime;
+	private Long endTime;
 
 	public HttpProxy getHp() {
 		return hp;

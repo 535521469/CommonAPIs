@@ -25,6 +25,7 @@ public class InputHPServiceImp implements InputHPService {
 		this.hpDao = hpDao;
 	}
 
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	public void replaceHttpProxy(HttpProxy hp) {
 		HttpProxy existHP = hpDao.getByHostAndPort(hp.getHost(), hp.getPort());
 		if (null != existHP) {
