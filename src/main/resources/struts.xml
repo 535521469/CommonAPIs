@@ -3,12 +3,20 @@
         "-//Apache Software Foundation//DTD Struts Configuration 2.3.15//EN"
         "http://struts.apache.org/dtds/struts-2.3.dtd">
 <struts>
-
+	<constant name="struts.devMode" value="false" />
 	<package name="httpproxy" extends="json-default" namespace="/httpproxy">
-		<action name="listIncompletedSellers" class="hpController">
+		<action name="replaceHttpProxy" class="hpController" method="replaceHttpProxy">
 			<result type="json">
 				<param name="noCache">true</param>
 				<param name="contentType">text/html</param>
+				<param name="root">result</param>
+			</result>
+		</action>
+		<action name="verifyHttpProxy" class="hpController" method="verifyHttpProxy">
+			<result type="json">
+				<param name="noCache">true</param>
+				<param name="contentType">text/html</param>
+				<param name="root">result</param>
 			</result>
 		</action>
 	</package>

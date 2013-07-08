@@ -6,5 +6,10 @@
 	<persistence-unit name="commonapis" transaction-type="RESOURCE_LOCAL">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
 		<class>httpproxy.domain.HttpProxy</class>
+
+		<properties>
+			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
+		</properties>
+
 	</persistence-unit>
 </persistence>
