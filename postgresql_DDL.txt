@@ -9,7 +9,7 @@ psql DC;
 CREATE OR REPLACE FUNCTION update_mtime()
 RETURNS TRIGGER AS $$
 BEGIN
-   NEW.changetimestamp = now(); 
+   NEW.CTime = now(); 
    RETURN NEW;
 END;
 $$ language 'plpgsql';
