@@ -24,20 +24,13 @@ public class HPDaoImp implements HPDao {
 		this.entityManager = entityManager;
 	}
 
-	public void updateLastValidDateTime(HttpProxy hp) {
-
-	}
-
-	public void updatelastInvalidDateTime(HttpProxy hp) {
-
-	}
-
 	public HttpProxy getByHostAndPort(String host, int port) {
-		Query q = entityManager
-				.createQuery("from HttpProxy as hp where hp.host=:host and hp.port = :port");
+		Query q = entityManager.createQuery(
+				"from HttpProxy as hp where hp.host=:host and hp.port = :port",
+				HttpProxy.class);
 		q.setParameter("host", host);
 		q.setParameter("port", port);
-		
+
 		@SuppressWarnings("unchecked")
 		List<HttpProxy> hp = (List<HttpProxy>) q.getResultList();
 		if (hp.size() == 1) {
@@ -48,5 +41,17 @@ public class HPDaoImp implements HPDao {
 
 	public void saveHttpProxy(HttpProxy hp) {
 		entityManager.persist(hp);
+	}
+
+	public List<HttpProxy> listValidHttpProxy(int pageNo, int pageSize) {
+		Query q = entityManager
+				.createQuery(
+						"from HttpProxy as hp where hp.lastValidDateTime > hp.lastInvalidDateTime order by hp.lastValidDateTime desc",
+						HttpProxy.class);
+		q.setFirstResult(pageSize * (pageNo - 1));
+		q.setMaxResults(pageNo * pageSize);
+		@SuppressWarnings("unchecked")
+		List<HttpProxy> hp = (List<HttpProxy>) q.getResultList();
+		return hp;
 	}
 }

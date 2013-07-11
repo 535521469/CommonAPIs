@@ -10,6 +10,6 @@ public interface VerifyHPService {
 	 * @param timeout
 	 * @return
 	 */
-	public Long verify(HttpProxy hp, int timeout);
+	public Long verify(HttpProxy hp, int timeout,long beginTime);
 
 }

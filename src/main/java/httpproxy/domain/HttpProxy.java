@@ -7,10 +7,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
+@XmlRootElement
 @Table(name = "Proxy_HttpInfo")
 public class HttpProxy implements Cloneable {
 
@@ -33,6 +35,11 @@ public class HttpProxy implements Cloneable {
 
 	@Column(name = "LastInvalidDateTime", nullable = false)
 	private Date lastInvalidDateTime;
+
+	public boolean isValid() {
+		return this.getLastValidDateTime().compareTo(
+				this.getLastInvalidDateTime()) > 0;
+	}
 
 	public String getSeqID() {
 		return seqID;

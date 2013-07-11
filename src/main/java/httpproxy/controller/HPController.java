@@ -1,140 +1,86 @@
 package httpproxy.controller;
 
+import httpproxy.domain.HttpProxiesViewDomain;
 import httpproxy.domain.HttpProxy;
-import httpproxy.enums.HPPutResult;
-import httpproxy.enums.HPVerifyResult;
 import httpproxy.service.InputHPService;
+import httpproxy.service.ListHPService;
 import httpproxy.service.VerifyHPService;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.struts2.json.annotations.JSON;
+import javax.servlet.http.HttpServletRequest;
+
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
-import com.opensymphony.xwork2.Action;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 @Controller("hpController")
 public class HPController {
 
 	@Autowired
+	private VerifyHPService verifyHPService;
+	@Autowired
 	private InputHPService inputHPService;
 	@Autowired
-	private VerifyHPService verifyHPService;
-	private Map<String, String> result;
-	private Long requestTime;
+	private ListHPService listHPService;
 
-	private Integer timeout;
+	@RequestMapping(method = RequestMethod.GET, value = "/v1/access_with_proxy")
+	public ModelAndView accessWithProxy(HttpServletRequest request,
+			@RequestParam String beginTime) {
 
-	public int getTimeout() {
-		if (null == timeout) {
-			timeout = 5;
+		Map<String, String> ms = new HashMap<String, String>();
+		ms.put("beginTime", beginTime);
+		ms.put("result", "success");
+		return new ModelAndView("httpproxy_v1", ms);
+	}
+
+	@RequestMapping(method = RequestMethod.GET, value = "/v1/proxies")
+	public ModelAndView listValidHttpProxies(HttpServletRequest request,
+			@RequestParam String pageNo, @RequestParam String pageSize) {
+		if (Integer.valueOf(pageSize) > 500) {
+			pageSize = "500";
 		}
-		return timeout;
+		HttpProxiesViewDomain httpProxiesViewDomain = this.listHPService
+				.listHttpProxyViewDomains(Integer.valueOf(pageNo),
+						Integer.valueOf(pageSize));
+		return new ModelAndView("httpproxy_v1", "httpProxiesViewDomain",
+				httpProxiesViewDomain);
 	}
 
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
+	@RequestMapping(method = RequestMethod.GET, value = "/v1/httpproxy/")
+	public ModelAndView getHttpProxies(HttpServletRequest request,
+			@RequestParam String port, @RequestParam String host,
+			@RequestParam String timeout) {
 
-	public Long getRequestTime() {
-		return requestTime;
-	}
-
-	public void setRequestTime(Long requestTime) {
-		this.requestTime = requestTime;
-	}
-
-	public Map<String, String> getResult() {
-		return result;
-	}
-
-	@JSON
-	public void setResult(Map<String, String> result) {
-		this.result = result;
-	}
-
-	public InputHPService getInputHPService() {
-		return inputHPService;
-	}
-
-	@Autowired
-	public void setInputHPService(InputHPService inputHPService) {
-		this.inputHPService = inputHPService;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
-	}
-
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host) {
-		this.host = host;
-	}
-
-	private Integer port;
-	private String host;
-	private String country;
-
-	@JSON
-	public String getCountry() {
-		return country;
-	}
-
-	public void setCountry(String country) {
-		this.country = country;
-	}
-
-	public String replaceHttpProxy() {
+		Map<String, String> ms = new HashMap<String, String>();
+		// ms.put("method", id);
 
 		HttpProxy hp = new HttpProxy();
+		hp.setPort(Integer.valueOf(port));
 		hp.setHost(host);
-		hp.setPort(port);
-		hp.setCountry(country);
+
+		Long timeUsage = this.verifyHPService.verify(hp,
+				Integer.valueOf(timeout), new Date().getTime());
 
 		DateTime now = DateTime.now();
-		hp.setLastValidDateTime(now.toDate());
-		hp.setLastInvalidDateTime(now.minusSeconds(1).toDate());
 
-		this.inputHPService.replaceHttpProxy(hp);
-
-		this.result = new HashMap<String, String>();
-		this.result.put(HPPutResult.RESULT.getCode(),
-				HPPutResult.Result.YES.getCode());
-
-		return Action.SUCCESS;
-	}
-
-	public String verifyHttpProxy() {
-		HttpProxy hp = new HttpProxy();
-		hp.setHost(host);
-		hp.setPort(port);
-		hp.setCountry(country);
-
-		Long timeSpend = verifyHPService.verify(hp, timeout);
-
-		this.result = new HashMap<String, String>();
-		if (null == timeSpend) {
-			this.result.put(HPVerifyResult.RESULT.getCode(),
-					HPVerifyResult.Result.NO.getCode());
+		if (timeUsage == null) {
+			ms.put("result", "false");
+			hp.setLastInvalidDateTime(now.toDate());
+			hp.setLastValidDateTime(now.minusSeconds(1).toDate());
 		} else {
-			this.result.put(HPVerifyResult.RESULT.getCode(),
-					HPVerifyResult.Result.YES.getCode());
-			this.result.put(HPVerifyResult.TIME_SPEND.getCode(),
-					timeSpend.toString());
+			ms.put("result", "true");
+			ms.put("time_usage", timeUsage.toString());
+			hp.setLastValidDateTime(now.toDate());
+			hp.setLastInvalidDateTime(now.minusSeconds(1).toDate());
 		}
-
-		return Action.SUCCESS;
-
+		this.inputHPService.replaceHttpProxy(hp);
+		return new ModelAndView("httpproxy_v1", ms);
 	}
-
 }

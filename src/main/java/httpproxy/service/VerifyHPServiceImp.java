@@ -1,6 +1,5 @@
 package httpproxy.service;
 
-import httpproxy.dao.HPDao;
 import httpproxy.domain.HttpProxy;
 
 import java.io.BufferedReader;
@@ -13,7 +12,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,44 +21,50 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 public class VerifyHPServiceImp implements VerifyHPService {
 
-	@Autowired
-	private HPDao hpDao;
+	private String host;
 
-	public HPDao getHpDao() {
-		return hpDao;
+	public String getHost() {
+		return host;
 	}
 
-	@Autowired
-	public void setHpDao(HPDao hpDao) {
-		this.hpDao = hpDao;
+	public void setHost(String host) {
+		this.host = host;
 	}
 
-	public Long verify(HttpProxy hp, int timeout) {
+	public Long verify(HttpProxy hp, int timeout, long beginTime) {
 
 		long now = new Date().getTime();
 		long end = 0L;
+		BufferedReader in = null;
 		try {
 
-//			URL url = new URL("http://www.baidu.com");
-			 URL url = new URL("http://localhost:8080?host=" + hp.getHost()
-			 + "&port=" + hp.getPort() + "&country=" + hp.getCountry());
+			// String urls =
+			// "http://localhost:8080/CommonAPIs/api/v1/access_with_proxy?format=json&beginTime"
+			String urls = "http://"
+					+ host
+					+ "/CommonAPIs/api/v1/access_with_proxy?format=json&beginTime="
+					+ beginTime;
+			// urls = "http://www.baidu.com";
+
+			LoggerFactory.getLogger(this.getClass()).debug(urls);
+
+			URL url = new URL(urls);
+
 			Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
 					hp.getHost(), hp.getPort()));
 			HttpURLConnection uc = (HttpURLConnection) url
 					.openConnection(proxy);
 			uc.setConnectTimeout(timeout);
+			uc.setReadTimeout(timeout);
 			uc.connect();
 			String line = null;
+
 			StringBuffer tmp = new StringBuffer();
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					uc.getInputStream()));
+			in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
 			while ((line = in.readLine()) != null) {
 				tmp.append(line);
 			}
 
-			System.out.println(tmp.toString());
-
-			uc.getInputStream();
 			end = new Date().getTime();
 			return end - now;
 		} catch (MalformedURLException e) {
@@ -68,6 +73,15 @@ public class VerifyHPServiceImp implements VerifyHPService {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
+		} finally {
+			if (null != null) {
+
+				try {
+					in.close();
+				} catch (IOException e) {
+				}
+			}
+
 		}
 
 	}
